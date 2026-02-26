@@ -1,5 +1,15 @@
 #include <cuda_runtime.h>
 
+static inline void cuda_check(cudaError_t e) {
+    if (e != cudaSuccess) {
+        // Keep it simple: propagate error via device reset + abort.
+        // (Callers in benchmarks will see a clear failure instead of silent wrong results.)
+        printf("CUDA error: %s\n", cudaGetErrorString(e));
+        fflush(stdout);
+        abort();
+    }
+}
+
 __global__ void conv_2d_kernel(const float* input, const float* kernel, float* output,
                                int input_rows, int input_cols,
                                int kernel_rows, int kernel_cols,
@@ -41,5 +51,6 @@ void solve_with_cuda(const float* input, const float* kernel, float* output,
                                     input_rows, input_cols,
                                     kernel_rows, kernel_cols,
                                     out_rows, out_cols);
-    cudaDeviceSynchronize();
+    cuda_check(cudaGetLastError());
+    cuda_check(cudaDeviceSynchronize());
 }

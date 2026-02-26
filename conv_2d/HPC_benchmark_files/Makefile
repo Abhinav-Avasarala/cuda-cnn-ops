@@ -23,9 +23,16 @@ ifeq ($(ALLOW_UNSUPPORTED),1)
   NVCCFLAGS += -allow-unsupported-compiler
 endif
 
-# Default targets should run on V100 (sm_70) and A100 (sm_80).
-# Override if needed, e.g.: make CUDA_GENCODE="-gencode arch=compute_90,code=sm_90"
-CUDA_GENCODE ?= -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80
+# Default gencodes cover common NCSU-era GPUs:
+# - P100: sm_60
+# - V100: sm_70
+# - A100: sm_80
+# Override if needed, e.g.:
+#   make CUDA_GENCODE="-gencode arch=compute_80,code=sm_80"
+CUDA_GENCODE ?= \
+	-gencode arch=compute_60,code=sm_60 \
+	-gencode arch=compute_70,code=sm_70 \
+	-gencode arch=compute_80,code=sm_80
 
 NVCCFLAGS ?= $(OPT) -std=c++17 $(CUDA_GENCODE)
 

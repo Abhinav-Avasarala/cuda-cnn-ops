@@ -34,6 +34,8 @@ nvcc --version
 nvidia-smi
 ```
 
+Note: `nvidia-smi` reports the **driver** CUDA capability (e.g. \"CUDA Version: 12.6\"). Your build uses the **toolkit** selected by `nvcc --version` / your loaded `cuda` module, and that toolkit determines which GCC versions are accepted by nvcc.
+
 ## 3) Build
 
 ```bash
@@ -68,6 +70,9 @@ make clean && make ALLOW_UNSUPPORTED=1
 If your GPU architecture differs, override `CUDA_GENCODE`. Examples:
 
 ```bash
+# P100
+make clean && make CUDA_GENCODE="-gencode arch=compute_60,code=sm_60"
+
 # V100
 make clean && make CUDA_GENCODE="-gencode arch=compute_70,code=sm_70"
 
