@@ -10,7 +10,7 @@ This folder benchmarks the three conv2d implementations in `conv_2d/`:
 Example (adjust `-n` cores, `-W` minutes, queue, and GPU options to your cluster rules):
 
 ```bash
-bsub -Is -n 8 -W 30 -q gpu -gpu "num=1:mode=shared:mps=no" tcsh
+bsub -Is -q gpu -gpu "num=1" -W 30 bash
 ```
 
 Notes:
