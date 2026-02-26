@@ -11,6 +11,18 @@ CFLAGS   ?= $(OPT)
 OPENMP_CFLAGS   ?= -fopenmp
 OPENMP_CXXFLAGS ?= -fopenmp
 
+# nvcc uses a *host compiler* for C++ compilation. Many clusters default to GCC > 12,
+# which CUDA 12.0 may reject. Set this to a GCC 12 toolchain when needed:
+#   make NVCC_CCBIN=g++-12
+NVCC_CCBIN ?= $(CXX)
+
+# If your site only provides newer GCC, you can force nvcc to proceed (not recommended):
+#   make ALLOW_UNSUPPORTED=1
+ALLOW_UNSUPPORTED ?= 0
+ifeq ($(ALLOW_UNSUPPORTED),1)
+  NVCCFLAGS += -allow-unsupported-compiler
+endif
+
 # Default targets should run on V100 (sm_70) and A100 (sm_80).
 # Override if needed, e.g.: make CUDA_GENCODE="-gencode arch=compute_90,code=sm_90"
 CUDA_GENCODE ?= -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80
@@ -35,13 +47,13 @@ $(BUILD_DIR) $(BIN_DIR):
 	mkdir -p $@
 
 $(OUT): $(OBJS) | $(BIN_DIR)
-	$(NVCC) $(NVCCFLAGS) $^ -Xcompiler "$(OPENMP_CXXFLAGS)" -o $@ -lgomp
+	$(NVCC) $(NVCCFLAGS) -ccbin $(NVCC_CCBIN) $^ -Xcompiler "$(OPENMP_CXXFLAGS)" -o $@ -lgomp
 
 $(BUILD_DIR)/bench_all_conv2d.o: bench_all_conv2d.cu | $(BUILD_DIR)
-	$(NVCC) $(NVCCFLAGS) -Xcompiler "$(OPENMP_CXXFLAGS)" -c $< -o $@
+	$(NVCC) $(NVCCFLAGS) -ccbin $(NVCC_CCBIN) -Xcompiler "$(OPENMP_CXXFLAGS)" -c $< -o $@
 
 $(BUILD_DIR)/conv_2d_naive.o: $(ROOT)/conv_2d_naive.cu | $(BUILD_DIR)
-	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+	$(NVCC) $(NVCCFLAGS) -ccbin $(NVCC_CCBIN) -c $< -o $@
 
 $(BUILD_DIR)/single_thread_conv2d.o: $(ROOT)/single_thread_conv2d.cpp | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@

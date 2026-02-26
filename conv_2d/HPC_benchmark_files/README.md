@@ -41,6 +41,30 @@ cd conv_2d/HPC_benchmark_files
 make clean && make
 ```
 
+### If nvcc complains about your GCC version
+
+CUDA 12.0 supports host GCC up to 12.x. If your default `gcc` is newer (e.g. 13/14), do **one** of these:
+
+- **Preferred**: load a GCC 12 module, then rebuild:
+
+```bash
+module avail gcc
+module load gcc/12
+make clean && make
+```
+
+- **Or**: point `nvcc` at a GCC 12 binary explicitly:
+
+```bash
+make clean && make NVCC_CCBIN=g++-12
+```
+
+- **Last resort (not recommended)**: force nvcc to accept the newer compiler:
+
+```bash
+make clean && make ALLOW_UNSUPPORTED=1
+```
+
 If your GPU architecture differs, override `CUDA_GENCODE`. Examples:
 
 ```bash

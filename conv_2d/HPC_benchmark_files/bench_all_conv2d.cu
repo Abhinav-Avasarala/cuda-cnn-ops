@@ -138,7 +138,6 @@ int main(int argc, char** argv) {
   // Correctness (single-thread baseline).
   run_cpu();
   run_omp();
-  cuda_check(cudaMemcpy(out_gpu.data(), d_output, sizeof(float) * out_gpu.size(), cudaMemcpyDeviceToHost), "D2H output");
   run_cuda();
   cuda_check(cudaMemcpy(out_gpu.data(), d_output, sizeof(float) * out_gpu.size(), cudaMemcpyDeviceToHost), "D2H output");
 
