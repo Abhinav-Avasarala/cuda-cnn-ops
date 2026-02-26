@@ -1,0 +1,18 @@
+FROM ubuntu:24.04
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
+COPY conv_2d /work/conv_2d
+
+WORKDIR /work/conv_2d/docker_benchmark_files
+RUN make clean && make bench
+
+# Usage:
+#   docker run --rm cpu-conv2d-bench            # OpenMP default threads
+#   docker run --rm cpu-conv2d-bench 8 20 5     # threads=8, iters=20, warmup=5
+ENTRYPOINT ["./bin/bench_cpu_conv2d"]
+
