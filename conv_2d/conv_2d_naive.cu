@@ -1,4 +1,6 @@
 #include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static inline void cuda_check(cudaError_t e) {
     if (e != cudaSuccess) {
