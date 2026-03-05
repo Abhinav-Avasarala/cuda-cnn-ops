@@ -1,10 +1,11 @@
-# HPC Max Pooling Benchmark (CPU single-thread vs OpenMP)
+# HPC Max Pooling Benchmark (CPU single-thread vs OpenMP vs CUDA)
 
-This folder benchmarks the two CPU max pooling implementations in `max_pooling/`:
+This folder benchmarks the three max pooling implementations in `max_pooling/`:
 - **Single-thread CPU**: `../max_pooling_single_thread_cpu.cpp` (`solve_with_cpu`)
 - **OpenMP CPU**: `../omp_max_pooling.c` (`solve_with_cpu_omp`)
+- **CUDA**: `../max_pooling.cu` (`solve`, device pointers)
 
-The benchmark driver is `bench_cpu_max_pooling.cpp`, and it uses the same test cases as the Docker benchmark.
+The benchmark driver is `bench_all_max_pooling.cu`, and it uses the same test cases as the Docker benchmark.
 
 ---
 
@@ -32,14 +33,15 @@ Open output:
 less maxpool_bench.<jobid>.out
 ```
 
-### 2) Interactive CPU job (optional)
+### 2) Interactive GPU job (optional)
 
 ```bash
-bsub -Is -n 8 -W 30 bash
+bsub -Is -q gpu -gpu "num=1" -n 8 -W 30 bash
 module load gcc
+module load cuda
 cd ~/path/to/cuda-cnn-ops/max_pooling/hpc_benchmark_files
 make clean && make bench
-./bin/bench_cpu_max_pooling 8 20 5
+./bin/bench_all_max_pooling 8 20 5
 ```
 
 ---
@@ -49,7 +51,7 @@ make clean && make bench
 ```bash
 cd max_pooling/hpc_benchmark_files
 make clean && make bench
-./bin/bench_cpu_max_pooling 8 20 5
+./bin/bench_all_max_pooling 8 20 5
 ```
 
 Arguments:
@@ -59,17 +61,21 @@ Arguments:
 
 Output includes:
 - OpenMP thread count
+- CUDA device name
 - Timing policy (`best-of iters`, with warmup)
 - Per-case timings:
   - `single(ms)`
   - `omp(ms)`
-  - `speedup` (`single / omp`)
+  - `omp_speedup` (`single / omp`)
+  - `cuda_kernel(ms)`
+  - `cuda_speedup` (`single / cuda_kernel`)
+  - `cuda_plus_D2H(ms)` (kernel + device->host output copy)
 
 ---
 
-## If OpenMP build fails
+## If nvcc complains about GCC version
 
-If your default compiler does not support OpenMP:
+CUDA 12.0 typically supports host GCC up to 12.x. If default `gcc` is newer:
 
 - Preferred:
 
@@ -79,10 +85,29 @@ module load gcc/12
 make clean && make bench
 ```
 
-- Or explicitly set compilers:
+- Or:
 
 ```bash
-make clean && make bench CC=gcc CXX=g++
+make clean && make bench NVCC_CCBIN=g++-12
+```
+
+- Last resort:
+
+```bash
+make clean && make bench ALLOW_UNSUPPORTED=1
+```
+
+If your GPU architecture differs, override `CUDA_GENCODE`, for example:
+
+```bash
+# P100
+make clean && make bench CUDA_GENCODE="-gencode arch=compute_60,code=sm_60"
+
+# V100
+make clean && make bench CUDA_GENCODE="-gencode arch=compute_70,code=sm_70"
+
+# A100
+make clean && make bench CUDA_GENCODE="-gencode arch=compute_80,code=sm_80"
 ```
 
 ---
@@ -105,4 +130,4 @@ sbatch --cpus-per-task=16 --export=ALL,OMP_NUM_THREADS=16 slurm_bench.sh
 
 ## Why `extern "C"` appears in benchmark declarations
 
-`bench_cpu_max_pooling.cpp` is compiled as C++. `omp_max_pooling.c` is compiled as C, so `extern "C"` is used in benchmark declarations to avoid C++ name mangling and keep linker symbols compatible.
+`bench_all_max_pooling.cu` is compiled as C++. `omp_max_pooling.c` is compiled as C, so `extern "C"` is used in benchmark declarations to avoid C++ name mangling and keep linker symbols compatible.

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=maxpool-cpu-bench
-#SBATCH --output=maxpool-cpu-bench-%j.out
-#SBATCH --error=maxpool-cpu-bench-%j.err
+#SBATCH --job-name=maxpool-all-bench
+#SBATCH --output=maxpool-all-bench-%j.out
+#SBATCH --error=maxpool-all-bench-%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:1
 #SBATCH --time=00:10:00
 
 set -euo pipefail
@@ -12,6 +13,7 @@ set -euo pipefail
 # Update module names for your cluster if needed.
 module purge
 module load gcc || true
+module load cuda || true
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
