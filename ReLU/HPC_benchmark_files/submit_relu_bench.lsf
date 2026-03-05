@@ -1,0 +1,22 @@
+#!/bin/bash
+#BSUB -J relu_bench
+#BSUB -q gpu
+#BSUB -gpu "num=1"
+#BSUB -n 8
+#BSUB -W 00:30
+#BSUB -oo relu_bench.%J.out
+#BSUB -eo relu_bench.%J.err
+
+set -euo pipefail
+
+# Start from the directory where you ran `bsub < submit_relu_bench.lsf`.
+cd "${LS_SUBCWD:-$PWD}"
+
+module load gcc
+module load cuda
+
+cd ReLU/HPC_benchmark_files
+make clean && make
+
+# Adjust arguments as needed.
+./bin/bench_all_relu --n=33554432 --iters=30 --warmup=5 --threads=8
