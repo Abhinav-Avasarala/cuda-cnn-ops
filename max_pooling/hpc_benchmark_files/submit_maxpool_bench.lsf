@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#BSUB -J maxpool_bench
+#BSUB -q standard
+#BSUB -n 8
+#BSUB -W 00:10
+#BSUB -R "span[hosts=1]"
+#BSUB -oo maxpool_bench.%J.out
+#BSUB -eo maxpool_bench.%J.err
+
+set -euo pipefail
+
+module purge
+module load gcc || true
+
+export OMP_NUM_THREADS="${LSB_DJOB_NUMPROC:-8}"
+
+echo "LSB_JOBID=${LSB_JOBID:-N/A}"
+echo "LSB_DJOB_NUMPROC=${LSB_DJOB_NUMPROC:-N/A}"
+echo "OMP_NUM_THREADS=${OMP_NUM_THREADS}"
+
+make clean && make bench
+./bin/bench_cpu_max_pooling "${OMP_NUM_THREADS}" 20 5
